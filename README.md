@@ -46,5 +46,9 @@ psql
 * Create dbt env
 ```
 dbt init test1
-
 ```
+* Check dbt
+```
+dbt debug
+```
+
