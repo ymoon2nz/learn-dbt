@@ -2,9 +2,21 @@
 Learn dbt
 
 ## Install
+### ref - https://docs.getdbt.com/docs/core/pip-install
+* Get dbt Package by pip
 ```
-#pip install dbt-postgres
-
+pip install dbt-postgres
+# OR
+python -m pip install \
+  dbt-core \
+  dbt-postgres \
+  dbt-redshift \
+  dbt-snowflake \
+  dbt-bigquery \
+  dbt-trino
+```
+* Setup Python Environment
+```
 python -m venv dbt-env
 source dbt-env/bin/activate
 ```
@@ -13,7 +25,6 @@ source dbt-env/bin/activate
 #python -m pip install dbt-core dbt-ADAPTER_NAME
 python -m pip install dbt-core dbt-postgres
 ```
-
 
 ## Tutorial 0
 
