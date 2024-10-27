@@ -1,0 +1,14 @@
+
+version: 2
+
+models:
+  - name: stock_aapl
+    description: "Apple Stock"
+    columns:
+      - name: date
+        description: "Date field"
+        data_tests:
+          - not_null
+      - name: price
+        description: "Stock Price"
+

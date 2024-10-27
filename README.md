@@ -30,6 +30,10 @@ docker run -itd \
     --name postgres1 \
     postgres
 ```
+* Copy file to docker
+```
+docker cp {file} postgres1:/var/lib/postgresql/.
+```
 * Add Test Data
 ```
 docker exec -it postgres1 bash
@@ -41,7 +45,28 @@ psql
   CREATE TABLE dbt.test1 (col1 int, col2 varchar);
   insert into dbt.test1 values (1, 'hello');
   insert into dbt.test1 values (2, 'postgres');
-
+```
+* [stock-us]
+``` sql
+-- Date,AAPL,FB,GOOG,JPM,NVDA,^GSPC
+CREATE TABLE stock_us (
+    ID SERIAL,
+    DATE DATE,
+    AAPL NUMERIC(12,2) ,
+    FB NUMERIC(12,2) ,
+    GOOG NUMERIC(12,2) ,
+    JPM NUMERIC(12,2) ,
+    NVDA NUMERIC(12,2) ,
+    "^GSPC" NUMERIC(12,2),
+    UPDATED timestamp DEFAULT CURRENT_TIMESTAMP
+);
+```
+* Import from file (csv)
+```
+COPY stock_us(DATE, AAPL, FB, GOOG, JPM, NVDA, "^GSPC")
+FROM '/var/lib/postgresql/stock-us.csv'
+DELIMITER ','
+CSV HEADER;
 ```
 * Create dbt env
 ```
