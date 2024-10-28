@@ -83,8 +83,23 @@ CSV HEADER;
 ```
 dbt init test1
 ```
+* Run dbt
+```
+dbt run
+```
+* Run for a model (including sub)
+```
+dbt run --models +hist_all
+```
 * Check dbt
 ```
 dbt debug
 ```
-
+* Generate Docs
+```
+dbt docs generate
+```
+* Serve as web for docs
+```
+dbt docs serve
+```
