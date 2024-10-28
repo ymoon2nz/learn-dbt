@@ -32,5 +32,13 @@ clean-targets:         # directories to be removed by `dbt clean`
 models:
   test1:
     # Config indicated by + and applies to all files under models/example/
-    example:
-      +materialized: view
+    +materialized: view
+
+seeds:
+  test1:
+    sample_world_tickers:
+      +column_types:
+        free_cash_flow: bigint
+        total_assets: bigint
+        market_cap: bigint
+        total_revenue: bigint

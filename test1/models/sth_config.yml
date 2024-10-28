@@ -2,7 +2,14 @@
 version: 2
 
 models:
-  - name: stock_aapl
+  - name: tickers_nyse
+    description: "{{ doc('Tickers') }}"
+    columns:
+      - name: ticker
+        description: "Stock Ticker"
+      - name: name
+        description: "Stock Name"
+  - name: hist_aapl
     description: "Apple Stock"
     columns:
       - name: date

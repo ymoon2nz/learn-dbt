@@ -1,0 +1,1 @@
+select "Ticker", "Exchange", count(*) from dbt.stock_info GROUP BY "Ticker", "Exchange" HAVING count(*) > 1
