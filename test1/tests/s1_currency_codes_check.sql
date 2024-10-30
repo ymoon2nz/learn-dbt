@@ -1,0 +1,1 @@
+select code, count(*) from dbt.currency_codes group by code having count(*) > 1
