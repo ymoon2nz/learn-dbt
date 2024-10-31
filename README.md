@@ -72,9 +72,16 @@ dbt docs serve
 
 ## Tutorial
 ### FX Project
-* Create ``fx-project`` 
+* Create PostgreSQL user
 ```
-dbt init fx-project
+docker cp dbt-dev-db.sql postgres1:/var/lib/postgresql/data/.
+docker exec --user postgres \
+  --workdir /var/lib/postgresql/data/ \
+  -it postgres1 psql -f dbt-dev-db.sql
+```
+* Create ``fx_tutorial`` 
+```
+dbt init fx_tutorial
 ```
 
 ## Tips
