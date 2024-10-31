@@ -1,12 +1,34 @@
 # learn-dbt
 Learn dbt
 
-## Install
+## Postgres ``docker``
+* Run PostgreSQL as docker
+```
+cd ~
+mkdir -p ./containers/postgres1/data
+docker run -itd \
+    -e POSTGRES_USER=postgres -e POSTGRES_DB=postgres -e POSTGRES_PASSWORD=postgres1 \
+    -p 5432:5432 \
+    -v ./containers/postgres1/data:/var/lib/postgresql/data \
+    --name postgres1 \
+    postgres
+```
+## Setup & Install ``dbt``
 ### ref - https://docs.getdbt.com/docs/core/pip-install
+* (Mac) Brew Updates for psycopg2
+```
+brew install postgresql
+
+pip install psycopg2-binary
+# OR
+pip install psycopg2
+```
 * Get dbt Package by pip
 ```
+# dbt postgres adapter
 pip install dbt-postgres
 # OR
+# dbt core & adapters (dbt-ADAPTER_NAME)
 python -m pip install \
   dbt-core \
   dbt-postgres \
@@ -17,30 +39,45 @@ python -m pip install \
 ```
 * Setup Python Environment
 ```
-python -m venv dbt-env
-source dbt-env/bin/activate
-```
-* dbt core & postgres adapter
-```
-#python -m pip install dbt-core dbt-ADAPTER_NAME
-python -m pip install dbt-core dbt-postgres
+python -m venv py-env
+source py-env/bin/activate
 ```
 
-## Tutorial 0
-
-## Tutorial 1
-
-## Tutorial 2
-
-* Run PostgreSQL as docker
+## Run ``dbt``
+* Create dbt env
 ```
-docker run -itd \
-    -e POSTGRES_USER=postgres -e POSTGRES_DB=postgres -e POSTGRES_PASSWORD=postgres1 \
-    -p 5432:5432 \
-    -v ./containers/postgres1/data:/var/lib/postgresql/data \
-    --name postgres1 \
-    postgres
+dbt init {project-name}
+# Follow the prompts
 ```
+* Run dbt
+```
+dbt run
+```
+* Run for a model (including sub)
+```
+dbt run --models +hist_all
+```
+* Check dbt
+```
+dbt debug
+```
+* Generate Docs
+```
+dbt docs generate
+```
+* Serve as web for docs
+```
+dbt docs serve
+```
+
+## Tutorial
+### FX Project
+* Create ``fx-project`` 
+```
+dbt init fx-project
+```
+
+## Tips
 * Copy file to docker
 ```
 docker cp {file} postgres1:/var/lib/postgresql/.
@@ -79,27 +116,4 @@ FROM '/var/lib/postgresql/stock-us.csv'
 DELIMITER ','
 CSV HEADER;
 ```
-* Create dbt env
-```
-dbt init test1
-```
-* Run dbt
-```
-dbt run
-```
-* Run for a model (including sub)
-```
-dbt run --models +hist_all
-```
-* Check dbt
-```
-dbt debug
-```
-* Generate Docs
-```
-dbt docs generate
-```
-* Serve as web for docs
-```
-dbt docs serve
-```
+
