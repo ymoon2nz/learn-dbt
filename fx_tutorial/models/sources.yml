@@ -1,0 +1,7 @@
+sources:
+  - name: fx
+    database: dbt
+    schema: fx_tutorial
+    tables:
+      - name: hist_d_aud
+        identifier: history_daily_aud
