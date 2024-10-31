@@ -79,10 +79,51 @@ docker exec --user postgres \
   --workdir /var/lib/postgresql/data/ \
   -it postgres1 psql -f dbt-dev-db.sql
 ```
-* Create ``fx_tutorial`` 
+* Create ``fx_tutorial`` Project
 ```
 dbt init fx_tutorial
+
+# #######
+# 01:23:35  Setting up your profile.
+# Which database would you like to use?
+# ...
+# [5] postgres
+# Enter a number: 5
+# host (hostname for the instance): localhost
+# port [5432]:
+# user (dev username): dev
+# pass (dev password):
+# dbname (default database that dbt will build objects in): dbt
+# schema (default schema that dbt will build objects in): fx_tutorial
+# threads (1 or more) [1]: 1
+# ########
+
+# Connection Test...
+cd fx_tutorial
+dbt debug
 ```
+
+* Seeding Currency Codes and History Data
+```
+dbt seed --select s1_currency_codes
+dbt seed --select s1_req_collections
+
+dbt seed --select s1_aud1980
+dbt seed --select s1_aud1990
+dbt seed --select s1_aud2000
+dbt seed --select s1_aud2010
+dbt seed --select s1_aud2020
+```
+
+* Models
+
+* Macrosß
+
+* Tests
+
+* Snapshots
+
+* Analyses
 
 ## Tips
 * Copy file to docker
@@ -115,6 +156,22 @@ CREATE TABLE stock_us (
     "^GSPC" NUMERIC(12,2),
     UPDATED timestamp DEFAULT CURRENT_TIMESTAMP
 );
+```
+* psql commands
+```
+# Connect to database
+\c {database}
+# List databases (+ for detail)
+\l
+\l+
+# List schemas (+ for detail, S for all)
+\dn
+\dn+
+\dnS
+# List tables (+ for detail, S for all schemas)
+\dt
+\dt+
+\dtS
 ```
 * Import from file (csv)
 ```
