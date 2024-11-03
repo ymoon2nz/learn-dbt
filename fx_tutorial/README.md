@@ -1,11 +1,7 @@
-Welcome to your new dbt project!
-
-### Using the starter project
-
-Try running the following commands:
-- dbt run
-- dbt test
-
+Foreign Exchange Tutorial with **dbt**
+----------------------------
+### References
+* AUD History Data: https://www.rba.gov.au/statistics/historical-data.html
 
 ### Resources:
 - Learn more about dbt [in the docs](https://docs.getdbt.com/docs/introduction)
