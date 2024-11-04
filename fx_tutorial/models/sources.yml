@@ -1,7 +1,23 @@
 sources:
-  - name: fx
-    database: dbt
-    schema: fx_tutorial
+  - name: fx_hist
+    schema: fx_hist
     tables:
-      - name: hist_d_aud
-        identifier: history_daily_aud
+      - name: aud1980
+        identifier: s1_aud1980
+      - name: aud1990
+        identifier: s1_aud1990
+      - name: aud2000
+        identifier: s1_aud2000
+      - name: aud2010
+        identifier: s1_aud2010
+      - name: aud2020
+        identifier: s1_aud2020
+  - name: fx
+    schema: fx
+    tables:
+      - name: hist_aud2usd
+        identifier: stg_history_aud2usd
+      - name: hist_nzd2usd
+        identifier: stg_history_nzd2usd
+      - name: hist_nzd2krw
+        identifier: stg_history_nzd2krw

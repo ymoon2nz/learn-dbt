@@ -31,4 +31,12 @@ clean-targets:         # directories to be removed by `dbt clean`
 # files using the `{{ config(...) }}` macro.
 models:
   fx_tutorial:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table
 
+# Currency rates including history data
+seeds:
+  fx_tutorial:
+    +enabled: true
