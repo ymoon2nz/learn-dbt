@@ -74,10 +74,16 @@ dbt docs serve
 ### FX Project
 * Create PostgreSQL user
 ```
-docker cp dbt-dev-db.sql postgres1:/var/lib/postgresql/data/.
+# fx_tutorial
+docker cp fx_tutorial/db-create.sql postgres1:/var/lib/postgresql/data/.
 docker exec --user postgres \
   --workdir /var/lib/postgresql/data/ \
-  -it postgres1 psql -f dbt-dev-db.sql
+  -it postgres1 psql -f db-create.sql
+# fx_hist
+docker cp fx_hist/db-create.sql postgres1:/var/lib/postgresql/data/.
+docker exec --user postgres \
+  --workdir /var/lib/postgresql/data/ \
+  -it postgres1 psql -f db-create.sql  
 ```
 * Create ``fx_tutorial`` Project
 ```
@@ -105,25 +111,37 @@ dbt debug
 
 * Seeding Currency Codes and History Data
 ```
-dbt seed --select s1_currency_codes
-dbt seed --select s1_req_collections
+dbt seed --full-refresh --select s1_currency_codes
+dbt seed --full-refresh --select s1_req_collections
 
-dbt seed --select s1_aud1980
-dbt seed --select s1_aud1990
-dbt seed --select s1_aud2000
-dbt seed --select s1_aud2010
-dbt seed --select s1_aud2020
+dbt seed --full-refresh --select s1_aud1980
+dbt seed --full-refresh --select s1_aud1990
+dbt seed --full-refresh --select s1_aud2000
+dbt seed --full-refresh --select s1_aud2010
+dbt seed --full-refresh --select s1_aud2020
+
 ```
 
 * Models
 
-* Macrosß
+* Packages
+```
+packages.yml
+###
+packages:
+- package: dbt-labs/dbt_utils
+  version: 1.3.0
+###
+dbt deps
+```
+* Macros
 
 * Tests
 
 * Snapshots
 
 * Analyses
+
 
 ## Tips
 * Copy file to docker
