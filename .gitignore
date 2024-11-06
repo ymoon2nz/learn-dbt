@@ -163,7 +163,6 @@ cython_debug/
 # Python environment
 dbt-env/
 py-env/
-dbt-dag/
 
 # Logs
 logs/
