@@ -1,0 +1,7 @@
+models:
+  - name: stg_history_nzd2usd
+    columns:
+      - name: fx_date
+        tests:
+          - unique
+          - not_null

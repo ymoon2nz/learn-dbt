@@ -24,6 +24,22 @@ select
     	ORDER BY fx_date 
     	ROWS BETWEEN 90 PRECEDING AND current ROW) 
         as last_90_max,
+    MIN(usd) OVER (
+    	ORDER BY fx_date 
+    	ROWS BETWEEN 180 PRECEDING AND current ROW) 
+        as last_180_min,
+    MAX(usd) OVER (
+    	ORDER BY fx_date 
+    	ROWS BETWEEN 360 PRECEDING AND current ROW) 
+        as last_180_max,
+    MIN(usd) OVER (
+    	ORDER BY fx_date 
+    	ROWS BETWEEN 360 PRECEDING AND current ROW) 
+        as last_360_min,
+    MAX(usd) OVER (
+    	ORDER BY fx_date 
+    	ROWS BETWEEN 360 PRECEDING AND current ROW) 
+        as last_360_max,
     AVG(usd) OVER (
     	ORDER BY fx_date 
     	ROWS BETWEEN 30 PRECEDING AND current ROW) 

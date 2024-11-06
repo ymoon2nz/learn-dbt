@@ -9,8 +9,8 @@ print(conn)
 #df = conn.query("SELECT TO_CHAR(fx_date, 'dd/mm/yyyy') as fx_date, usd FROM fx.analysis_nzd order by fx_date", ttl="10m")
 #df = conn.query("SELECT fx_date, usd FROM fx.analysis_nzd order by fx_date", ttl="10m")
 df = conn.query("SELECT fx_date, usd, \
-    last_30_max, last_30_min, last_360_avg \
-    FROM fx.last_trend_nzd2usd where 15 > DATE_PART('year', NOW()) - DATE_PART('year', fx_date) order by fx_date;", ttl="10m")
+    last_30_max, last_30_min, last_180_min, last_360_avg \
+    FROM fx.last_trend_nzd2usd where 20 > DATE_PART('year', NOW()) - DATE_PART('year', fx_date) order by fx_date;", ttl="10m")
 #SQL_Query = pd.read_sql_query('SELECT fx_date, usd, last_30_max, last_30_min FROM fx.analysis_nzd', conn)
 
 ## Print results.
@@ -22,5 +22,7 @@ st.write("FX - AUD Chart")
 st.line_chart(
     df,
     x="fx_date", 
-    y=["usd", "last_30_max", "last_30_min", "last_360_avg"],
-    color=["#4eb811", "#0000FF", "#BA03FC", "#FF0000"],)
+    y=["last_30_max", "last_360_avg", "last_180_min", "usd"],
+    color=["#FF7043", "#1565C0", "#0D47A1", "#424242"],)
+    # #FF7043=orange, #64B5F6=bright blue, #1565C0=light blue, #424242=light black, #C62828=red
+    # #0D47A1=dark blue
