@@ -4,13 +4,13 @@ Learn dbt
 ## Postgres ``docker``
 * Run PostgreSQL as docker
 ```
-cd ~
-mkdir -p ./containers/postgres1/data
+mkdir -p ~/containers/pg_fx/data
 docker run -itd \
-    -e POSTGRES_USER=postgres -e POSTGRES_DB=postgres -e POSTGRES_PASSWORD=postgres1 \
-    -p 5432:5432 \
-    -v ./containers/postgres1/data:/var/lib/postgresql/data \
-    --name postgres1 \
+    -e POSTGRES_USER=postgres -e POSTGRES_DB=postgres -e POSTGRES_PASSWORD=pg_fx \
+    -p 5433:5432 \
+    -v ~/containers/pg_fx/data:/var/lib/pg_fx/data \
+    --name pg_fx \
+    --network dbt-dag_b2cd72_airflow \
     postgres
 ```
 ## Setup & Install ``dbt``
@@ -75,15 +75,15 @@ dbt docs serve
 * Create PostgreSQL user
 ```
 # fx_tutorial
-docker cp fx_tutorial/db-create.sql postgres1:/var/lib/postgresql/data/.
+docker cp fx_tutorial/db-create.sql pg_fx:/var/lib/postgresql/data/.
 docker exec --user postgres \
   --workdir /var/lib/postgresql/data/ \
-  -it postgres1 psql -f db-create.sql
+  -it pg_fx psql -f db-create.sql
 # fx_hist
-docker cp fx_hist/db-create.sql postgres1:/var/lib/postgresql/data/.
+docker cp fx_hist/db-create.sql pg_fx:/var/lib/postgresql/data/.
 docker exec --user postgres \
   --workdir /var/lib/postgresql/data/ \
-  -it postgres1 psql -f db-create.sql  
+  -it pg_fx psql -f db-create.sql  
 ```
 * Create ``fx_tutorial`` Project
 ```
