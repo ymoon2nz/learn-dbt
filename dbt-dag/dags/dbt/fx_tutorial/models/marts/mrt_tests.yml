@@ -1,0 +1,19 @@
+models:
+  - name: last_trend_nzd2usd
+    columns:
+      - name: fx_date
+        tests:
+          - unique
+          - not_null
+  - name: last_trend_nzd2krw
+    columns:
+      - name: fx_date
+        tests:
+          - unique
+          - not_null
+  - name: last_trend_aud2usd
+    columns:
+      - name: fx_date
+        tests:
+          - unique
+          - not_null

@@ -1,0 +1,14 @@
+sources:
+  - name: fx_hist
+    schema: fx_hist
+    tables:
+      - name: aud1980
+        identifier: s1_aud1980
+      - name: aud1990
+        identifier: s1_aud1990
+      - name: aud2000
+        identifier: s1_aud2000
+      - name: aud2010
+        identifier: s1_aud2010
+      - name: aud2020
+        identifier: s1_aud2020

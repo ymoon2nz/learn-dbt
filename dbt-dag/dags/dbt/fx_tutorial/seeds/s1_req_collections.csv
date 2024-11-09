@@ -1,0 +1,7 @@
+id,req_type,frequency,code,codes
+1,currency,daily,USD,
+2,currency,daily,AUD,
+3,currency,daily,NZD,
+4,currency,daily,KRW,
+5,currency,daily,JPY,
+6,set,hourly,,"{ ""currency"" : [""USD"", ""AUD"", ""NZD"", ""KRW"", ""JPY""] }"
