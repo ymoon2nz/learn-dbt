@@ -6,13 +6,14 @@ Learn dbt
 ```
 mkdir -p ~/containers/pg_fx/data
 docker run -itd \
-    -e POSTGRES_USER=postgres -e POSTGRES_DB=postgres -e POSTGRES_PASSWORD=pg_fx \
+    -e POSTGRES_USER=postgres -e POSTGRES_DB=postgres -e POSTGRES_PASSWORD=dbtdev \
     -p 5433:5432 \
     -v ~/containers/pg_fx/data:/var/lib/pg_fx/data \
     --name pg_fx \
-    --network dbt-dag_b2cd72_airflow \
+    --network {airflow network name} \
     postgres
 ```
+
 ## Setup & Install ``dbt``
 ### ref - https://docs.getdbt.com/docs/core/pip-install
 * (Mac) Brew Updates for psycopg2
@@ -72,18 +73,18 @@ dbt docs serve
 
 ## Tutorial
 ### FX Project
-* Create PostgreSQL user
+* Create PostgreSQL DB & User
 ```
-# fx_tutorial
-docker cp fx_tutorial/db-create.sql pg_fx:/var/lib/postgresql/data/.
-docker exec --user postgres \
-  --workdir /var/lib/postgresql/data/ \
+docker cp ./db-create.sql pg_fx:/var/lib/postgresql/data/.
+docker exec --user postgres --workdir /var/lib/postgresql/data/ \
   -it pg_fx psql -f db-create.sql
-# fx_hist
-docker cp fx_hist/db-create.sql pg_fx:/var/lib/postgresql/data/.
-docker exec --user postgres \
-  --workdir /var/lib/postgresql/data/ \
-  -it pg_fx psql -f db-create.sql  
+```
+* OR Create on Airflow PostgreSQL
+```
+AIRFLOW_POSTGRES=`docker ps --format "table {{.Names}}" | grep postgres`
+docker cp ./db-create.sql ${AIRFLOW_POSTGRES}:/var/lib/postgresql/data/.
+docker exec --user postgres --workdir /var/lib/postgresql/data/ \
+  -it ${AIRFLOW_POSTGRES} psql -f db-create.sql
 ```
 * Create ``fx_tutorial`` Project
 ```
