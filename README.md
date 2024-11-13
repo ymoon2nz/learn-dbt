@@ -13,6 +13,11 @@ docker run -itd \
     --network {airflow network name} \
     postgres
 ```
+* Attach to Airflow Network
+```
+airflow_docker_net=`docker network list | grep airflow | awk '{print $2}' | head -n 1`
+docker network connect ${airflow_docker_net} pg_fx
+```
 
 ## Setup & Install ``dbt``
 ### ref - https://docs.getdbt.com/docs/core/pip-install
