@@ -1,4 +1,9 @@
+* Ref: https://medium.com/orchestras-data-release-pipeline-blog/installing-and-configuring-apache-airflow-a-step-by-step-guide-5ff602c47a36
 
+* Create Airflow Admin
+```
+airflow users  create --role Admin --username admin --email admin --firstname admin --lastname admin --password admin
+```
 
 * Bulk Stock Data: http://finance.jasonstrimpel.com/bulk-stock-download/
 
