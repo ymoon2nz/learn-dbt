@@ -3,11 +3,13 @@ from pathlib import Path
 from datetime import datetime, timezone
 from airflow.decorators import dag, task
 from airflow.operators.postgres_operator import PostgresOperator
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 from datetime import datetime, timezone
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 import pandas as pd
 
 AWS_S3_CONN_ID = "S3_conn"
+DB_CONN = "postgres_conn"
 S3_BUCKNAME = 'ymoon-au-dbt-fx-raw'
 TARGET_PATH = "hist/%s" % datetime.now(timezone.utc).strftime("%Y%m")
 LOOKUP_PATH = "lookups"
@@ -28,6 +30,23 @@ def _get_financials_file(symbol):
 
 @dag(start_date=datetime(2024, 11, 11), schedule='@monthly', catchup=False)
 def nzx50_financials_process2_db():
+
+    @task
+    def check_previous_run():
+        # Establish connection using PostgresHook
+        hook = PostgresHook(postgres_conn_id=DB_CONN)
+        
+        # Run a query to fetch the first row
+        sql_query = "SELECT * FROM st.run_log LIMIT 1"
+        result = hook.get_first(sql_query)
+        
+        # Log and return the result
+        if result:
+            print(f"First row: {result}")
+            return result
+        else:
+            print("No rows found in the table.")
+            return None
 
     @task
     def download2_S3_nzx50():
@@ -73,6 +92,11 @@ def nzx50_financials_process2_db():
         print("Table: st.hist_details created")
 
     @task()
+    def check4_db_nzx50():
+        print("Checking database for NZX50 Previous Run(s)...")
+
+
+    @task()
     def insert2_db_nzx50():
         print ('Starting nzx50_financials_uploads_S3')
         symbols = _get_nzx50_symbols()
@@ -99,6 +123,6 @@ def nzx50_financials_process2_db():
     def tag_S3_complete_nzx50():
         print("Starting... tag_S3_complete_nzx50")
 
-    download2_S3_nzx50() >> create_stock_details_table() >> insert2_db_nzx50()
+    download2_S3_nzx50() >> check4_db_nzx50() >> create_stock_details_table() >> insert2_db_nzx50()
 
 nzx50_financials_process2_db()   

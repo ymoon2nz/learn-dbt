@@ -32,7 +32,7 @@ pip install psycopg2
 * Get dbt Package by pip
 ```
 # dbt postgres adapter
-pip install dbt-postgres
+pip install dbt-core dbt-postgres --upgrade
 # OR
 # dbt core & adapters (dbt-ADAPTER_NAME)
 python -m pip install \
@@ -40,8 +40,7 @@ python -m pip install \
   dbt-postgres \
   dbt-redshift \
   dbt-snowflake \
-  dbt-bigquery \
-  dbt-trino
+  dbt-bigquery --upgrade
 ```
 * Setup Python Environment
 ```
@@ -53,6 +52,7 @@ source py-env/bin/activate
 * Create dbt env
 ```
 dbt init {project-name}
+mkdir {project-name}/.dbt
 # Follow the prompts
 ```
 * Run dbt
