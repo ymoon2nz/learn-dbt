@@ -11,19 +11,19 @@ import pandas as pd
 AWS_S3_CONN_ID = "S3_conn"
 DB_CONN = "postgres_conn"
 S3_BUCKNAME = 'ymoon-au-dbt-fx-raw'
+JOB_NAME = "stock_financials" 
 TARGET_PATH = "hist/%s" % datetime.now(timezone.utc).strftime("%Y%m")
 LOOKUP_PATH = "lookups"
-FNAME_PRE = "stock_financials" 
 FNAME_EXT = "json"
-NZX50_FNAME = "NZX-50.csv"
+STLIST_FNAME = "NZX-50.csv"
 
-def _get_nzx50_symbols():
-    filepath = '/tmp/%s/%s/%s' % (S3_BUCKNAME, LOOKUP_PATH, NZX50_FNAME)
+def _get_stock_symbols():
+    filepath = '/tmp/%s/%s/%s' % (S3_BUCKNAME, LOOKUP_PATH, STLIST_FNAME)
     df = pd.read_csv(filepath, usecols=['Profile'])
     return df
 
 def _get_financials_file(symbol):
-    filepath = '/tmp/%s/%s/%s-%s.%s' % (S3_BUCKNAME, TARGET_PATH, FNAME_PRE, symbol, FNAME_EXT)
+    filepath = '/tmp/%s/%s/%s-%s.%s' % (S3_BUCKNAME, TARGET_PATH, JOB_NAME, symbol, FNAME_EXT)
     with open(filepath) as file:
         jsonv = json.load(file)
     return jsonv
@@ -31,27 +31,31 @@ def _get_financials_file(symbol):
 @dag(start_date=datetime(2024, 11, 11), schedule='@monthly', catchup=False)
 def nzx50_financials_process2_db():
 
-    @task
-    def check_previous_run():
+    @task()
+    def check4_previous_run():
+        print("Checking database for financials If already Run...")
         # Establish connection using PostgresHook
         hook = PostgresHook(postgres_conn_id=DB_CONN)
         
         # Run a query to fetch the first row
-        sql_query = "SELECT * FROM st.run_log LIMIT 1"
+        sql_query = """SELECT * FROM st.run_log 
+            where log_type ='%s' and log_info='%s:%s' and log_status = 'COMPLETED'
+            LIMIT 1""" % (JOB_NAME, TARGET_PATH, STLIST_FNAME)    
         result = hook.get_first(sql_query)
         
         # Log and return the result
         if result:
-            print(f"First row: {result}")
+            print(f"Previous Run: {result}")
+            raise Exception("Already Completed Previously!")
             return result
         else:
             print("No rows found in the table.")
             return None
 
     @task
-    def download2_S3_nzx50():
+    def getfrom_S3():
         print ('Starting nzx50_financials_process_db - download_nzx50_S3()')
-        filepath_name = "/tmp/%s/%s/%s" % (S3_BUCKNAME, LOOKUP_PATH, NZX50_FNAME)
+        filepath_name = "/tmp/%s/%s/%s" % (S3_BUCKNAME, LOOKUP_PATH, STLIST_FNAME)
         try:
             filepath = Path(filepath_name)
         except FileNotFoundError:
@@ -61,7 +65,7 @@ def nzx50_financials_process2_db():
             os.remove(filepath_name)
         hook = S3Hook(AWS_S3_CONN_ID)
         local_path = "/tmp/%s/%s/" % (S3_BUCKNAME, LOOKUP_PATH)
-        key_filename = "%s/%s" % (LOOKUP_PATH, NZX50_FNAME)
+        key_filename = "%s/%s" % (LOOKUP_PATH, STLIST_FNAME)
         print ("filename: %s" % key_filename)
         hook.download_file(
             key=key_filename,
@@ -72,32 +76,7 @@ def nzx50_financials_process2_db():
         )
 
     @task()
-    def create_stock_details_table():
-        print("create_stock_details_table...")
-        pgOp = PostgresOperator(
-            task_id='create_stock_details_table',
-            postgres_conn_id='postgres_conn',
-            sql="""
-                CREATE TABLE IF NOT EXISTS st.hist_details (
-                st_dump_id SERIAL PRIMARY KEY,
-                schedule_run TEXT,
-                type TEXT,
-                info TEXT,
-                dump JSON,
-                updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-                """
-        )
-        pgOp.execute(dict())
-        print("Table: st.hist_details created")
-
-    @task()
-    def check4_db_nzx50():
-        print("Checking database for NZX50 Previous Run(s)...")
-
-
-    @task()
-    def insert2_db_nzx50():
+    def insert2_db():
         print ('Starting nzx50_financials_uploads_S3')
         symbols = _get_nzx50_symbols()
         insert_count = 0
@@ -110,19 +89,33 @@ def nzx50_financials_process2_db():
                 task_id='process_nzx50_into_db',
                 postgres_conn_id='postgres_conn',
                 sql="""
-                INSERT INTO st.hist_details (type, schedule_run, info, dump)
-                VALUES (%(fname)s, %(run)s, %(info)s, %(json)s)
+                INSERT INTO st.hist_capture (capture_type, capture_run, capture_info, capture_dump)
+                VALUES (%(job)s, %(target)s, %(symbol)s, %(json)s)
                 """,
                 #parameters={ "json" : json.dumps({ "NZDUSD=X" : {} }) }
-                parameters={ "fname": FNAME_PRE, "run": TARGET_PATH, "info": symbol, "json": json.dumps(jsonv) }
+                parameters={ "job": JOB_NAME, "target": TARGET_PATH, "symbol": symbol, "json": json.dumps(jsonv) }
             ).execute({})
             insert_count+=1
         print("Total Insert: %s!" % str(insert_count))
     
     @task()
-    def tag_S3_complete_nzx50():
+    def log_complete2_db():
         print("Starting... tag_S3_complete_nzx50")
+        # Establish connection using PostgresHook
+        hook = PostgresHook(postgres_conn_id=DB_CONN)
+        sql = "insert into st.run_log (log_status, log_type, log_info) values (%(status)s, %(job)s, %(target)s)"
+        
+        result = hook.run(sql, parameters={ "status": "COMPLETED", "job": JOB_NAME, "target": TARGET_PATH + ":" + STLIST_FNAME })
+        
+        # Log and return the result
+        if result:
+            print(f"Previous Run: {result}")
+            raise Exception("Already Completed Previously!")
+            return result
+        else:
+            print("No rows found in the table.")
+            return None
 
-    download2_S3_nzx50() >> check4_db_nzx50() >> create_stock_details_table() >> insert2_db_nzx50()
+    check4_previous_run() >> getfrom_S3() >> insert2_db() >> log_complete2_db()
 
 nzx50_financials_process2_db()   

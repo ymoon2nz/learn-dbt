@@ -87,9 +87,11 @@ docker exec --user postgres --workdir /var/lib/postgresql/data/ \
 * OR Create on Airflow PostgreSQL
 ```
 AIRFLOW_POSTGRES=`docker ps --format "table {{.Names}}" | grep postgres`
-docker cp ./db-create.sql ${AIRFLOW_POSTGRES}:/var/lib/postgresql/data/.
+docker cp ./src/*.sql ${AIRFLOW_POSTGRES}:/var/lib/postgresql/data/.
 docker exec --user postgres --workdir /var/lib/postgresql/data/ \
   -it ${AIRFLOW_POSTGRES} psql -f db-create.sql
+docker exec --user postgres --workdir /var/lib/postgresql/data/ \
+  -it ${AIRFLOW_POSTGRES} psql -f create-objects.sql
 ```
 * Create ``fx_tutorial`` Project
 ```

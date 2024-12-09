@@ -10,7 +10,11 @@ AWS_S3_CONN_ID = "S3_conn"
 S3_BUCKNAME = 'ymoon-au-dbt-fx-raw'
 TARGET_PATH = "hist/%s" % datetime.now(timezone.utc).strftime("%Y%m")
 LOOKUP_PATH = "lookups"
-FNAME_PRE = "stock_financials" 
+#FNAME_PRE_ARR = ["stock_financials", "stock_balancesheet", "stock_cashflow"]
+FNAME_DATA = {
+    'service': ['financials', 'balancesheet', 'cashflow'],
+    'fname': ['stock_financials', 'stock_balancesheet', 'stock_cashflow']
+}
 FNAME_EXT = "json"
 NZX50_FNAME = "NZX-50.csv"
 
@@ -29,11 +33,13 @@ def nzx50_financials_uploads_S3():
         filepath_name = "/tmp/%s/%s/%s" % (S3_BUCKNAME, LOOKUP_PATH, NZX50_FNAME)
         try:
             filepath = Path(filepath_name)
+            os.remove(filepath_name)
         except FileNotFoundError:
             print("filename: %s not exists" % filepath_name)
+        except Exception as e:
+            print(e)
         else:
-            print("filename: %s exists" % filepath_name)
-            os.remove(filepath_name)
+            print("Unknown Error!")
         hook = S3Hook(AWS_S3_CONN_ID)
         local_path = "/tmp/%s/%s/" % (S3_BUCKNAME, LOOKUP_PATH)
         key_filename = "%s/%s" % (LOOKUP_PATH, NZX50_FNAME)
@@ -61,14 +67,16 @@ def nzx50_financials_uploads_S3():
         exists_count = 0
         for i, d1 in df.iterrows():
             symbol = "%s.NZ" % d1['Profile']
-            filepath_name = "/tmp/%s/%s/%s-%s.%s" % (S3_BUCKNAME, TARGET_PATH, FNAME_PRE, symbol, FNAME_EXT)
-            if os.path.isfile(filepath_name):
-                print("Filename: %s Already Exists! Today's run already completed?!" % filepath_name)
-                raise Exception(filepath_name)
-            else:
-                # print("Filename: %s not exists" % filepath_name)   
-                exists_count += 1
-        if exists_count != len(df.index):
+            fname_df = pd.DataFrame(FNAME_DATA)
+            for fname_i, fname_row in fname_df.iterrows():
+                filepath_name = "/tmp/%s/%s/%s-%s.%s" % (S3_BUCKNAME, TARGET_PATH, fname_row['fname'], symbol, FNAME_EXT)
+                if os.path.isfile(filepath_name):
+                    print("Filename: %s Already Exists! Today's run already completed?!" % filepath_name)
+                    raise Exception(filepath_name)
+                else:
+                    # print("Filename: %s not exists" % filepath_name)   
+                    exists_count += 1
+        if exists_count != (len(df.index) * 3):
             print("File count: %s is Mismatch in Count!" % exists_count)
             raise Exception(filepath_name)
         else:
@@ -81,16 +89,23 @@ def nzx50_financials_uploads_S3():
         for i, symbol in symbols.iterrows():
             symbol = symbol['Profile']+'.NZ'
             ticker = yf.Ticker(symbol)
-            fin = ticker.financials
-
-            # ticker details into one dataframe
-            fs = pd.concat([fin])
-            fs_json = fs.to_json()
-            filename = "%s-%s.%s" % (FNAME_PRE, symbol, FNAME_EXT)
-            with open( "/tmp/%s/%s/%s" % (S3_BUCKNAME, TARGET_PATH, filename), 'w') as f:
-                f.write('{ "%s": %s }' % (symbol, fs_json))
-            #print("Created - /tmp/%s/%s/%s" % (S3_BUCKNAME, TARGET_PATH, filename))
-            created_count += 1
+            
+            fname_df = pd.DataFrame(FNAME_DATA)
+            for fname_i, fname_row in fname_df.iterrows():
+                if fname_row['service'] == 'financials':
+                    service = ticker.financials
+                elif fname_row['service'] == 'balancesheet':
+                    service = ticker.balancesheet
+                elif fname_row['service'] == 'cashflow':
+                    service = ticker.cashflow
+                # ticker details into one dataframe
+                srv_data = pd.concat([service])
+                srv_json = srv_data.to_json()
+                filename = "%s-%s.%s" % (fname_row['fname'], symbol, FNAME_EXT)
+                with open( "/tmp/%s/%s/%s" % (S3_BUCKNAME, TARGET_PATH, filename), 'w') as f:
+                    f.write('{ "%s": %s }' % (symbol, srv_json))
+                #print("Created - /tmp/%s/%s/%s" % (S3_BUCKNAME, TARGET_PATH, filename))
+                created_count += 1
         print ("Downloaded in /tmp: %s / %s" % (created_count, len(symbols.index)))
 
     @task
@@ -100,17 +115,27 @@ def nzx50_financials_uploads_S3():
         hook = S3Hook(AWS_S3_CONN_ID)
         for i, symbol in symbols.iterrows():
             symbol = symbol['Profile']+'.NZ'
-            filename = "%s-%s.%s" % (FNAME_PRE, symbol, FNAME_EXT)
-            print ("filename: %s" % filename)
-            hook.load_file(
-                filename="/tmp/%s/%s/%s" % (S3_BUCKNAME, TARGET_PATH, filename),
-                key="%s/%s" % (TARGET_PATH, filename),
-                bucket_name=S3_BUCKNAME,
-                replace=False
-            )
-            created_count+=1
+            fname_df = pd.DataFrame(FNAME_DATA)
+            for fname_i, fname_row in fname_df.iterrows():
+                filename = "%s-%s.%s" % (fname_row['fname'], symbol, FNAME_EXT)
+                print ("filename: %s" % filename)
+                hook.load_file(
+                    filename="/tmp/%s/%s/%s" % (S3_BUCKNAME, TARGET_PATH, filename),
+                    key="%s/%s" % (TARGET_PATH, filename),
+                    bucket_name=S3_BUCKNAME,
+                    replace=True
+                )
+                created_count+=1
         print("Uploaded to S3: %s / %s" % (created_count, len(symbols.index)))
+        filename = NZX50_FNAME
+        hook.load_file(
+            filename="/tmp/%s/%s/%s" % (S3_BUCKNAME, LOOKUP_PATH, NZX50_FNAME),
+            key="%s/%s" % (TARGET_PATH, filename),
+            bucket_name=S3_BUCKNAME,
+            replace=False
+        )
     
-    download_nzx50_S3() >> check_nzx50_if_exists() >> download_yf_nzx50() >> upload_yf_nzx50_S3()
+    #download_nzx50_S3() >> check_nzx50_if_exists() >> download_yf_nzx50() >> upload_yf_nzx50_S3()
+    upload_yf_nzx50_S3()
 
 nzx50_financials_uploads_S3()
