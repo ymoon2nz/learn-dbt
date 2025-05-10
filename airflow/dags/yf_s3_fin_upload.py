@@ -6,7 +6,7 @@ import os, json
 import yfinance, pandas
 
 AWS_S3_CONN_ID = "S3_conn"
-S3_BUCKNAME = 'ymoon-au-dbt-fx-raw'
+S3_BUCKNAME = 'ymoon-au-fx-raw'
 STOCK_SYMBOL = 'AIR.NZ'
 FILENAME = "stock_details-%s-%s.json" % (datetime.now(timezone.utc).strftime("%Y%m%d"), STOCK_SYMBOL)
 S3_PATH = 'hist'

@@ -1,5 +1,6 @@
 \c fx dev;
-
+CREATE SCHEMA IF NOT EXISTS FX;
+CREATE SCHEMA IF NOT EXISTS ST;
 
 CREATE TABLE IF NOT EXISTS fx.hist_capture (
     capture_id      SERIAL PRIMARY KEY,

@@ -6,11 +6,11 @@ from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.amazon.aws.sensors.s3 import S3KeySensor
 
 AWS_S3_CONN_ID = "S3_conn"
-S3_BUCKNAME = 'ymoon-au-dbt-fx-raw'
+S3_BUCKNAME = 'ymoon-au-fx-raw'
 S3_LOCATE = 'hist/nzd2usd.json'
 
 @dag(start_date=datetime(2024, 11, 11), schedule='@daily', catchup=False)
-def aws_s3_data_process():
+def aws_s3_sensor():
     
     @task
     def start_sensor():
@@ -40,4 +40,4 @@ def aws_s3_data_process():
 
     start_sensor() >> s3_sensor >> end_sensor()
 
-aws_s3_data_process()
+aws_s3_sensor()

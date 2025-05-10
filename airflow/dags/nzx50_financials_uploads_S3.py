@@ -7,7 +7,7 @@ import yfinance as yf, pandas as pd
 from pathlib import Path
 
 AWS_S3_CONN_ID = "S3_conn"
-S3_BUCKNAME = 'ymoon-au-dbt-fx-raw'
+S3_BUCKNAME = 'ymoon-au-fx-raw'
 TARGET_PATH = "hist/%s" % datetime.now(timezone.utc).strftime("%Y%m")
 LOOKUP_PATH = "lookups"
 #FNAME_PRE_ARR = ["stock_financials", "stock_balancesheet", "stock_cashflow"]

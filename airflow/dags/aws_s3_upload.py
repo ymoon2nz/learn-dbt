@@ -6,7 +6,7 @@ from airflow.providers.amazon.aws.sensors.s3 import S3KeySensor
 
 
 AWS_S3_CONN_ID = "S3_conn"
-S3_BUCKNAME = 'ymoon-au-dbt-fx-raw'
+S3_BUCKNAME = 'ymoon-au-fx-raw'
 FILENAME = "nzd2usd-%s.json" % (datetime.now(timezone.utc).strftime("%Y%m%d"))
 S3_LOCATE = 'hist/%s' % FILENAME
 

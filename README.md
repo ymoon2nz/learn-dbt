@@ -16,6 +16,7 @@ docker run -itd \
 * Attach to Airflow Network
 ```
 airflow_docker_net=`docker network list | grep airflow | awk '{print $2}' | head -n 1`
+echo $airflow_docker_net
 docker network connect ${airflow_docker_net} pg_fx
 ```
 
@@ -80,9 +81,12 @@ dbt docs serve
 ### FX Project
 * Create PostgreSQL DB & User
 ```
-docker cp ./db-create.sql pg_fx:/var/lib/postgresql/data/.
+docker cp ./src/*.sql pg_fx:/var/lib/postgresql/data/.
 docker exec --user postgres --workdir /var/lib/postgresql/data/ \
   -it pg_fx psql -f db-create.sql
+docker cp ./src/create-objects.sql pg_fx:/var/lib/postgresql/data/.
+docker exec --user postgres --workdir /var/lib/postgresql/data/ \
+  -it pg_fx psql -f create-objects.sql
 ```
 * OR Create on Airflow PostgreSQL
 ```

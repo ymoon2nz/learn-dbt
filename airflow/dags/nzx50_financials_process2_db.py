@@ -1,32 +1,49 @@
 import os, json
 from pathlib import Path
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from airflow.decorators import dag, task
 from airflow.operators.postgres_operator import PostgresOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from datetime import datetime, timezone
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
+import yfinance
+import json
 import pandas as pd
 
 AWS_S3_CONN_ID = "S3_conn"
 DB_CONN = "postgres_conn"
-S3_BUCKNAME = 'ymoon-au-dbt-fx-raw'
+S3_BUCKNAME = 'ymoon-au-fx-raw'
 JOB_NAME = "stock_financials" 
 TARGET_PATH = "hist/%s" % datetime.now(timezone.utc).strftime("%Y%m")
 LOOKUP_PATH = "lookups"
 FNAME_EXT = "json"
 STLIST_FNAME = "NZX-50.csv"
 
-def _get_stock_symbols():
+def _read_stock_symbols():
     filepath = '/tmp/%s/%s/%s' % (S3_BUCKNAME, LOOKUP_PATH, STLIST_FNAME)
     df = pd.read_csv(filepath, usecols=['Profile'])
     return df
 
-def _get_financials_file(symbol):
+def _read_financials_file(symbol):
     filepath = '/tmp/%s/%s/%s-%s.%s' % (S3_BUCKNAME, TARGET_PATH, JOB_NAME, symbol, FNAME_EXT)
     with open(filepath) as file:
         jsonv = json.load(file)
     return jsonv
+
+def _save_financials_file(symbol, jsonv):
+    folder_path = '/tmp/%s/%s' % (S3_BUCKNAME, TARGET_PATH)
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+    filepath = '/tmp/%s/%s/%s-%s.%s' % (S3_BUCKNAME, TARGET_PATH, JOB_NAME, symbol, FNAME_EXT)
+    with open(filepath, 'w') as file:
+        json.dump(jsonv, file, indent=4)
+
+def _get_yf_stock_data(symbol):
+    print ('get Yahoo Finance Stock data')
+    start_date = datetime.today()- timedelta(7) 
+    end_date = datetime.today()
+    yf_json = yfinance.download(symbol, start_date, end_date).to_json()
+    return yf_json
 
 @dag(start_date=datetime(2024, 11, 11), schedule='@monthly', catchup=False)
 def nzx50_financials_process2_db():
@@ -53,19 +70,22 @@ def nzx50_financials_process2_db():
             return None
 
     @task
-    def getfrom_S3():
-        print ('Starting nzx50_financials_process_db - download_nzx50_S3()')
+    def get_lookups_fromS3():
+        print ('Starting get_lookups_fromS3')
         filepath_name = "/tmp/%s/%s/%s" % (S3_BUCKNAME, LOOKUP_PATH, STLIST_FNAME)
-        try:
-            filepath = Path(filepath_name)
-        except FileNotFoundError:
-            print("filename: %s not exists" % filepath_name)
-        else:
-            print("filename: %s exists" % filepath_name)
-            os.remove(filepath_name)
-        hook = S3Hook(AWS_S3_CONN_ID)
         local_path = "/tmp/%s/%s/" % (S3_BUCKNAME, LOOKUP_PATH)
         key_filename = "%s/%s" % (LOOKUP_PATH, STLIST_FNAME)
+        #try:
+        #    filepath = Path(filepath_name)
+        #except FileNotFoundError:
+        #    print("filename: %s not exists" % filepath_name)
+        #else:
+        #    print("filename: %s exists" % filepath_name)
+        #    os.remove(filepath_name)
+        Path(local_path).mkdir(parents=True, exist_ok=True)
+        if os.path.exists(filepath_name):
+            os.remove(filepath_name)
+        hook = S3Hook(AWS_S3_CONN_ID)
         print ("filename: %s" % key_filename)
         hook.download_file(
             key=key_filename,
@@ -76,13 +96,24 @@ def nzx50_financials_process2_db():
         )
 
     @task()
+    def download_yf_stock_data():
+        print ('Downloading Yahoo Finance Stock data')
+        symbols = _read_stock_symbols()
+        start_date = datetime.today()- timedelta(7) 
+        end_date = datetime.today()
+        for i, symbol in symbols.iterrows():
+            symbol = "%s.NZ" % symbol['Profile']
+            jsonv = _get_yf_stock_data(symbol)
+            _save_financials_file(symbol, jsonv)
+
+    @task()
     def insert2_db():
         print ('Starting nzx50_financials_uploads_S3')
-        symbols = _get_nzx50_symbols()
+        symbols = _read_stock_symbols()
         insert_count = 0
         for i, symbol in symbols.iterrows():
             symbol = "%s.NZ" % symbol['Profile']
-            jsonv = _get_financials_file(symbol)
+            jsonv = _read_financials_file(symbol)
             print(json.dumps(jsonv))
             print(" in-progress... %s" % symbol)
             PostgresOperator(
@@ -116,6 +147,6 @@ def nzx50_financials_process2_db():
             print("No rows found in the table.")
             return None
 
-    check4_previous_run() >> getfrom_S3() >> insert2_db() >> log_complete2_db()
+    check4_previous_run() >> get_lookups_fromS3() >> download_yf_stock_data() >> insert2_db() >> log_complete2_db()
 
 nzx50_financials_process2_db()   
