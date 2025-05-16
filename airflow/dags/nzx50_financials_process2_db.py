@@ -43,6 +43,7 @@ def _get_yf_stock_data(symbol):
     start_date = datetime.today()- timedelta(7) 
     end_date = datetime.today()
     yf_json = yfinance.download(symbol, start_date, end_date).to_json()
+    print (yf_json)
     return yf_json
 
 @dag(start_date=datetime(2024, 11, 11), schedule='@monthly', catchup=False)
@@ -102,7 +103,8 @@ def nzx50_financials_process2_db():
         start_date = datetime.today()- timedelta(7) 
         end_date = datetime.today()
         for i, symbol in symbols.iterrows():
-            symbol = "%s.NZ" % symbol['Profile']
+            #symbol = "%s.NZ" % symbol['Profile']
+            symbol = "%s" % symbol['Profile']
             jsonv = _get_yf_stock_data(symbol)
             _save_financials_file(symbol, jsonv)
 
@@ -112,7 +114,8 @@ def nzx50_financials_process2_db():
         symbols = _read_stock_symbols()
         insert_count = 0
         for i, symbol in symbols.iterrows():
-            symbol = "%s.NZ" % symbol['Profile']
+            #symbol = "%s.NZ" % symbol['Profile']
+            symbol = "%s" % symbol['Profile']
             jsonv = _read_financials_file(symbol)
             print(json.dumps(jsonv))
             print(" in-progress... %s" % symbol)
