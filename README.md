@@ -81,7 +81,7 @@ dbt docs serve
 ### FX Project
 * Create PostgreSQL DB & User
 ```
-docker cp ./src/*.sql pg_fx:/var/lib/postgresql/data/.
+docker cp ./src/db-create.sql pg_fx:/var/lib/postgresql/data/.
 docker exec --user postgres --workdir /var/lib/postgresql/data/ \
   -it pg_fx psql -f db-create.sql
 docker cp ./src/create-objects.sql pg_fx:/var/lib/postgresql/data/.
